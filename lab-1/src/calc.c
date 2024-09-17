@@ -1,8 +1,12 @@
 #include <stdio.h>
 
 int main(void) {
-    float a, b, c;
-    scanf("%f %f %f", &a, &b, &c);
-    printf("%f", a + b + c);
+    float buf;
+    float answer = 0;
+
+    while (scanf("%f", &buf) == 1)
+        answer += buf;
+
+    printf("%f", answer);
     return 0;
 }
