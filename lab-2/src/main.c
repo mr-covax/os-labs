@@ -1,9 +1,11 @@
 #include <stdio.h>
+#include <stdbool.h>
 
 #include "experiment.h"
 
 int main(int argc, char *argv[]) {
     expConfig config;
+    config.enableTiming = false;
 
     if (argc > 1) {
         config.threads = atoi(argv[1]);

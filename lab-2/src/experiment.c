@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <unistd.h>
 #include <stdbool.h>
 #include <pthread.h>
 #include <sys/random.h>
@@ -8,6 +9,7 @@
 typedef struct {
     int occupied;
     int *results;
+    long *threadTimes;
     pthread_mutex_t mtx;
 } expRuntime;
 
@@ -20,16 +22,20 @@ int throw_dice() {
     return (output[0] % 6) + (output[1] % 6) + 2;
 }
 
-void* workerCode(void *args) {
+void* workerCode(void *arg) {
     int turns = cfg.rounds - cfg.currentRound;
+
+    struct timespec start, stop;
+    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &start);
 
     while (true) {
         pthread_mutex_lock(&vars.mtx);
         int cell = vars.occupied++;
         pthread_mutex_unlock(&vars.mtx);
 
-        if (cell >= cfg.testRuns)
-            pthread_exit(0);
+        if (cell >= cfg.testRuns) {
+            break;
+        }
 
         int score_1 = cfg.p1Score;
         int score_2 = cfg.p2Score;
@@ -46,6 +52,16 @@ void* workerCode(void *args) {
             vars.results[cell] = 0;
         }
     }
+
+    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &stop);
+
+    if (cfg.enableTiming) {
+        long *time = (long*)arg;
+        *time = 1000 * (stop.tv_sec - start.tv_sec) 
+                + (stop.tv_nsec - start.tv_nsec) / 1e6;
+    }
+
+    pthread_exit(0);
 }
 
 bool expFreeEnv() {
@@ -53,13 +69,20 @@ bool expFreeEnv() {
     if (vars.results != NULL) {
         free(vars.results);
     }
+    if (vars.threadTimes != NULL) {
+        free(vars.threadTimes);
+    }
     vars.results = NULL;
+    vars.threadTimes = NULL;
     vars.occupied = 0;
 }
 
 bool expPrepareEnv(expConfig configuration) {
     cfg = configuration;
     expFreeEnv();
+    if (cfg.enableTiming) {
+        vars.threadTimes = malloc(sizeof(long) * cfg.threads);
+    }
     vars.occupied = 0;
     vars.results = malloc(sizeof(int) * cfg.testRuns);
     pthread_mutex_init(&vars.mtx, NULL);
@@ -68,7 +91,7 @@ bool expPrepareEnv(expConfig configuration) {
 bool expRun() {
     pthread_t threads[cfg.threads];
     for (int i = 0; i < cfg.threads; ++i) {
-        pthread_create(&threads[i], NULL, workerCode, NULL);
+        pthread_create(&threads[i], NULL, workerCode, &vars.threadTimes[i]);
     }
     for (int i = 0; i < cfg.threads; ++i) {
         pthread_join(threads[i], NULL);
@@ -89,4 +112,10 @@ double expPlayerOneProb() {
 
 double expPlayerTwoProb() {
     return getPlayerProbability(2);
+}
+
+long *expGetThreadTimes() {
+    if (cfg.enableTiming == false)
+        return NULL;
+    return vars.threadTimes;
 }

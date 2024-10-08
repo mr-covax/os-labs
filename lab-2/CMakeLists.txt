@@ -7,4 +7,10 @@ set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 
 include_directories("${PROJECT_SOURCE_DIR}/include")
 
-add_executable(main src/main.c src/experiment.c)
+add_library(experiment src/experiment.c)
+
+add_executable(main src/main.c)
+target_link_libraries(main experiment)
+
+add_executable(benchmark src/benchmark.c)
+target_link_libraries(benchmark experiment)

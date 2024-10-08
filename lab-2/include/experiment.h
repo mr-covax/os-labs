@@ -10,12 +10,15 @@ typedef struct {
     int p2Score;
     int testRuns;
     int threads;
+    bool enableTiming;
+
 } expConfig;
 
 bool expPrepareEnv(expConfig configuration);
 bool expRun();
 double expPlayerOneProb();
 double expPlayerTwoProb();
+long* expGetThreadTimes();
 bool expFreeEnv();
 
 #endif
