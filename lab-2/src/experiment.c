@@ -64,7 +64,7 @@ void* workerCode(void *arg) {
     pthread_exit(0);
 }
 
-bool expFreeEnv() {
+void expFreeEnv() {
     pthread_mutex_destroy(&vars.mtx);
     if (vars.results != NULL) {
         free(vars.results);
@@ -77,7 +77,7 @@ bool expFreeEnv() {
     vars.occupied = 0;
 }
 
-bool expPrepareEnv(expConfig configuration) {
+void expPrepareEnv(expConfig configuration) {
     cfg = configuration;
     expFreeEnv();
     if (cfg.enableTiming) {
@@ -88,7 +88,7 @@ bool expPrepareEnv(expConfig configuration) {
     pthread_mutex_init(&vars.mtx, NULL);
 }
 
-bool expRun() {
+void expRun() {
     pthread_t threads[cfg.threads];
     for (int i = 0; i < cfg.threads; ++i) {
         pthread_create(&threads[i], NULL, workerCode, &vars.threadTimes[i]);

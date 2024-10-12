@@ -14,11 +14,11 @@ typedef struct {
 
 } expConfig;
 
-bool expPrepareEnv(expConfig configuration);
-bool expRun();
+void expPrepareEnv(expConfig configuration);
+void expRun();
 double expPlayerOneProb();
 double expPlayerTwoProb();
 long* expGetThreadTimes();
-bool expFreeEnv();
+void expFreeEnv();
 
 #endif
